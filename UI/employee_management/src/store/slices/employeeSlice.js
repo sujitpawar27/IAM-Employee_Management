@@ -1,34 +1,90 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createEmployeeApi, deleteEmployeeApi, getEmployeesApi, getEmployeesWithDepartmentApi, updateEmployeeApi } from "../../services/employeeApi";
 
-const initialState = {
-  employees: JSON.parse(localStorage.getItem("employees")) || [],
-};
+export const fetchEmployees = createAsyncThunk(
+  "employee/fetch",
+  async () => {
+    return await getEmployeesApi();
+  }
+);
+
+export const addEmployee = createAsyncThunk(
+  "employee/add",
+  async (data) => {
+    return await createEmployeeApi(data);
+  }
+);
+
+export const deleteEmployee = createAsyncThunk(
+  "employee/delete",
+  async (id) => {
+    await deleteEmployeeApi(id);
+    return id;
+  }
+);
+
+export const updateEmployee = createAsyncThunk(
+  "employee/update",
+  async ({ id, data }) => {
+    console.log("updateEmployee", id, data);
+    const response = await updateEmployeeApi(id, data);
+    console.log("response", response);
+    return response;
+  }
+);
+
+export const fetchEmployeesWithDepartment = createAsyncThunk(
+  "employee/fetchWithDepartment",
+  async () => {
+    return await getEmployeesWithDepartmentApi();
+  }
+);
 
 const employeeSlice = createSlice({
   name: "employee",
-  initialState,
-  reducers: {
-    addEmployee: (state, action) => {
-      state.employees.push(action.payload);
-      localStorage.setItem("employees", JSON.stringify(state.employees));
-    },
-    deleteEmployee: (state, action) => {
-      state.employees = state.employees.filter((e) => e.id !== action.payload);
-      localStorage.setItem("employees", JSON.stringify(state.employees));
-    },
-    updateEmployee: (state, action) => {
-      const index = state.employees.findIndex(
-        (e) => e.id === action.payload.id,
-      );
+  initialState: {
+    employees: [],
+    loading: false,
+  },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      // READ
+      .addCase(fetchEmployees.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchEmployees.fulfilled, (state, action) => {
+        state.employees = action.payload;
+        state.loading = false;
+      })
 
-      if (index !== -1) {
-        state.employees[index] = action.payload;
-        localStorage.setItem("employees", JSON.stringify(state.employees));
-      }
-    },
+      // CREATE
+      .addCase(addEmployee.fulfilled, (state, action) => {
+        state.employees.push(action.payload);
+      })
+
+      // DELETE
+      .addCase(deleteEmployee.fulfilled, (state, action) => {
+        state.employees = state.employees.filter(
+          (e) => e.id !== action.payload
+        );
+      })
+
+      // UPDATE
+      .addCase(updateEmployee.fulfilled, (state, action) => {
+        const index = state.employees.findIndex(
+          (e) => e.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.employees[index] = action.payload;
+        }
+      })
+
+      // FETCH WITH DEPARTMENT
+      .addCase(fetchEmployeesWithDepartment.fulfilled, (state, action) => {
+        state.employeesWithDept = action.payload;
+      });
   },
 });
 
-export const { addEmployee, deleteEmployee, updateEmployee } =
-  employeeSlice.actions;
 export default employeeSlice.reducer;

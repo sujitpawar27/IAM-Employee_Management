@@ -1,13 +1,20 @@
 import Navbar from "../components/layout/Navbar";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteEmployee } from "../store/slices/employeeSlice";
+import { deleteEmployee, fetchEmployees } from "../store/slices/employeeSlice";
 import Button from "../components/common/Button";
+import { useEffect } from "react";
 
 export default function Dashboard() {
   const employees = useSelector((state) => state.employee.employees);
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    dispatch(fetchEmployees());
+  }, [dispatch]);
+
+  console.log("employees", employees);
+  
   return (
     <>
       <Navbar />
@@ -26,7 +33,7 @@ export default function Dashboard() {
               <th className="border p-2">Name</th>
               <th className="border p-2">Role</th>
               <th className="border p-2">Email</th>
-              <th className="border p-2">Actions</th>
+              <th className="border p-2">Department</th>  
             </tr>
           </thead>
 
@@ -43,6 +50,7 @@ export default function Dashboard() {
                   <td className="border p-2">{emp.name}</td>
                   <td className="border p-2">{emp.role}</td>
                   <td className="border p-2">{emp.email}</td>
+                  <td className="border p-2">{emp.department}</td>
                   <td className="border p-2">
                     <Link to={`/employee/${emp.id}`} className="mr-2">
                       <Button variant="secondary">Edit</Button>
