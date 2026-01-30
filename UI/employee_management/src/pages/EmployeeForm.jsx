@@ -22,6 +22,10 @@ export default function EmployeeForm() {
   });
 
   useEffect(() => {
+    getDepartmentsApi().then(setDepartments);
+  }, []);
+
+  useEffect(() => {
     if (isEditMode && employeeToEdit) {
       setForm(employeeToEdit);
     }
@@ -29,13 +33,9 @@ export default function EmployeeForm() {
 
   const submit = (e) => {
     e.preventDefault();
-
-    if (isEditMode) {
-      dispatch(updateEmployee(form));
-    } else {
-      dispatch(addEmployee({ ...form, id: Date.now() }));
-    }
-
+    isEditMode
+      ? dispatch(updateEmployee({ id: Number(id), data: form }))
+      : dispatch(addEmployee(form));
     navigate("/");
   };
 
@@ -43,40 +43,88 @@ export default function EmployeeForm() {
     <>
       <Navbar />
 
-      <form className="p-6 max-w-md mx-auto" onSubmit={submit}>
-        <h2 className="text-xl font-semibold mb-4">
-          {isEditMode ? "Edit Employee" : "Add Employee"}
-        </h2>
+      {/* Gradient Background */}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex justify-center px-4 py-14">
+        <form
+          onSubmit={submit}
+          className="relative w-full max-w-xl backdrop-blur-xl bg-white/70 border border-white/40 rounded-2xl shadow-xl p-8"
+        >
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-extrabold text-gray-900">
+              {isEditMode ? "Edit Employee" : "Add Employee"}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Create or update employee information
+            </p>
+          </div>
 
-        <input
-          required
-          placeholder="Name"
-          className="border p-2 w-full mb-2"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
+          {/* Floating Input */}
+          {[
+            { label: "Full Name", key: "name", type: "text" },
+            { label: "Role", key: "role", type: "text" },
+            { label: "Email Address", key: "email", type: "email" },
+          ].map(({ label, key, type }) => (
+            <div key={key} className="relative mb-6">
+              <input
+                required
+                type={type}
+                value={form[key]}
+                onChange={(e) =>
+                  setForm({ ...form, [key]: e.target.value })
+                }
+                className="peer w-full bg-transparent border-b-2 border-gray-300 py-3 text-sm text-gray-900 focus:outline-none focus:border-blue-900 transition"
+              />
+              <label className="absolute left-0 top-3 text-gray-500 text-sm transition-all peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-900 peer-valid:-top-2 peer-valid:text-xs">
+                {label}
+              </label>
+            </div>
+          ))}
 
-        <input
-          required
-          placeholder="Role"
-          className="border p-2 w-full mb-2"
-          value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
-        />
+          {/* Department */}
+          <div className="mb-8">
+            <label className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
+              Department
+            </label>
+            <select
+              required
+              value={form.department_id}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  department_id: Number(e.target.value),
+                })
+              }
+              className="w-full rounded-xl border border-gray-200 bg-white/70 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+            >
+              <option value="">Select department</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <input
-          required
-          type="email"
-          placeholder="Email"
-          className="border p-2 w-full mb-4"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
+          {/* Actions */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => navigate("/")}
+            >
+              Cancel
+            </Button>
 
-        <Button type="submit">
-          {isEditMode ? "Update Employee" : "Save Employee"}
-        </Button>
-      </form>
+            <button
+              type="submit"
+              className="cursor-pointer rounded-xl bg-gradient-to-r from-blue-800 to-cyan-700 px-8 py-3 text-sm font-semibold text-white shadow-lg hover:scale-[1.02] hover:shadow-xl transition"
+            >
+              {isEditMode ? "Update Employee" : "Save Employee"}
+            </button>
+          </div>
+        </form>
+      </div>
     </>
   );
 }
